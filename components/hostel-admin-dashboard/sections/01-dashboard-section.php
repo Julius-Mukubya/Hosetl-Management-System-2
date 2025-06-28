@@ -49,7 +49,9 @@
                         <span class="fw-bold step-label" id="stepLabel4">4. Rooms</span>
                         <span class="fw-bold step-label" id="stepLabel5">5. Facilities</span>
                         <span class="fw-bold step-label" id="stepLabel6">6. Photos</span>
-                        <span class="fw-bold step-label" id="stepLabel7">7. Review</span>
+                        <span class="fw-bold step-label" id="stepLabel7">7. Booking Info</span>
+                        <span class="fw-bold step-label" id="stepLabel8">8. Availability</span>
+                        <span class="fw-bold step-label" id="stepLabel9">9. Review</span>
                     </div>
                     <form id="addHostelWizardForm">
                         <div class="wizard-step" id="wizardStep1">
@@ -140,11 +142,11 @@
                                         <option value="Shared Room (4 beds)">Shared Room (4 beds)</option>
                                     </select>
                                 </div>
-                                <div class="col-12" id="wizardDynamicRoomInputs"></div>
+                                <div class="col-12 d-none" id="wizardDynamicRoomInputs"></div>
                             </div>
                         </div>
                         <div class="wizard-step d-none" id="wizardStep5">
-                            <div class="row row-cols-2 row-cols-md-3 g-2">
+                            <div class="row">
                                 <?php
                                 // Load facilities from database
                                 $host = "localhost";
@@ -171,15 +173,17 @@
                                                 }
                                                 $currentCategory = $row['category'];
                                                 $firstCategory = false;
-                                                echo '<div class="col-12 mt-3">';
-                                                echo '<h6 class="text-muted mb-2">' . ucfirst($currentCategory) . ' Facilities</h6>';
-                                                echo '<div class="row row-cols-2 row-cols-md-3 g-2">';
+                                                echo '<div class="col-12 mb-4">';
+                                                echo '<h5 class="text-primary mb-3 border-bottom pb-2">' . ucfirst($currentCategory) . ' Facilities</h5>';
+                                                echo '<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">';
                                             }
                                             
                                             $facilityId = 'wizardFacility_' . $row['id'];
-                                            echo '<div class="form-check col">';
-                                            echo '<input class="form-check-input" type="checkbox" value="' . htmlspecialchars($row['name']) . '" id="' . $facilityId . '">';
-                                            echo '<label class="form-check-label" for="' . $facilityId . '">' . htmlspecialchars($row['name']) . '</label>';
+                                            echo '<div class="col">';
+                                            echo '<div class="form-check px-3">';
+                                            echo '<input class="form-check-input me-3" type="checkbox" value="' . htmlspecialchars($row['name']) . '" id="' . $facilityId . '">';
+                                            echo '<label class="form-check-label fw-medium" for="' . $facilityId . '">' . htmlspecialchars($row['name']) . '</label>';
+                                            echo '</div>';
                                             echo '</div>';
                                         }
                                         
@@ -199,16 +203,121 @@
                             </div>
                         </div>
                         <div class="wizard-step d-none" id="wizardStep6">
-                            <div class="mb-3">
-                                <label class="form-label">Front View</label>
-                                <input type="file" class="form-control" id="wizardFrontView" accept="image/*">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Rooms</label>
-                                <input type="file" class="form-control" id="wizardRoomsPhotos" accept="image/*" multiple>
+                            <div class="photo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                                <!-- Front View -->
+                                <div class="photo-upload-section">
+                                    <label for="wizardFrontView" class="form-label">Front View</label>
+                                    <div id="wizardFrontViewPreview" class="picture-box picture-box-placeholder" style="border: 1px solid #dee2e6; min-height: 150px; margin-bottom: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                        <i class="bi bi-image fs-1"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="wizardFrontView" accept="image/*" style="display: none;">
+                                    <div class="button-group mt-2" style="display: flex; gap: 10px;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('wizardFrontView').click()">Upload</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeWizardImage('wizardFrontView', 'wizardFrontViewPreview')">Remove</button>
+                                    </div>
+                                </div>
+
+                                <!-- Rooms -->
+                                <div class="photo-upload-section">
+                                    <label for="wizardRoomsPhotos" class="form-label">Rooms</label>
+                                    <div id="wizardRoomsPreview" class="multi-picture-box-container" style="border: 1px solid #dee2e6; min-height: 150px; margin-bottom: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                        <i class="bi bi-images fs-1"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="wizardRoomsPhotos" accept="image/*" multiple style="display: none;">
+                                    <div class="button-group mt-2" style="display: flex; gap: 10px;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('wizardRoomsPhotos').click()">Upload</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeWizardImage('wizardRoomsPhotos', 'wizardRoomsPreview')">Remove</button>
+                                    </div>
+                                </div>
+
+                                <!-- Bathrooms -->
+                                <div class="photo-upload-section">
+                                    <label for="wizardBathrooms" class="form-label">Bathrooms</label>
+                                    <div id="wizardBathroomsPreview" class="multi-picture-box-container" style="border: 1px solid #dee2e6; min-height: 150px; margin-bottom: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                        <i class="bi bi-images fs-1"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="wizardBathrooms" accept="image/*" multiple style="display: none;">
+                                    <div class="button-group mt-2" style="display: flex; gap: 10px;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('wizardBathrooms').click()">Upload</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeWizardImage('wizardBathrooms', 'wizardBathroomsPreview')">Remove</button>
+                                    </div>
+                                </div>
+
+                                <!-- Common Areas -->
+                                <div class="photo-upload-section">
+                                    <label for="wizardCommonAreas" class="form-label">Common Areas</label>
+                                    <div id="wizardCommonAreasPreview" class="multi-picture-box-container" style="border: 1px solid #dee2e6; min-height: 150px; margin-bottom: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                        <i class="bi bi-images fs-1"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="wizardCommonAreas" accept="image/*" multiple style="display: none;">
+                                    <div class="button-group mt-2" style="display: flex; gap: 10px;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('wizardCommonAreas').click()">Upload</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeWizardImage('wizardCommonAreas', 'wizardCommonAreasPreview')">Remove</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="wizard-step d-none" id="wizardStep7">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Minimum Booking Duration</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="wizardMinBookingDuration" placeholder="e.g., 30" min="1">
+                                        <select class="form-select" id="wizardMinBookingUnit" style="max-width: 150px;">
+                                            <option selected value="Hours">Hours</option>
+                                            <option value="Days">Days</option>
+                                            <option value="Weeks">Weeks</option>
+                                            <option value="Months">Months</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Advance Payment Required</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="wizardAdvancePayment" placeholder="e.g., 1000 or 1000.50">
+                                        <input type="text" class="form-control" id="wizardAdvancePaymentUnit" placeholder="e.g., USD, KES" style="max-width: 150px;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Refund Policy</label>
+                                    <textarea class="form-control" id="wizardRefundPolicy" rows="2" placeholder="e.g., Full refund if canceled 7 days prior"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Available Payment Methods</label>
+                                    <div class="payment-methods">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="wizardPaymentCash" value="Cash">
+                                            <label class="form-check-label" for="wizardPaymentCash">Cash</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="wizardPaymentMobileMoney" value="Mobile Money">
+                                            <label class="form-check-label" for="wizardPaymentMobileMoney">Mobile Money</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="wizardPaymentBankTransfer" value="Bank Transfer">
+                                            <label class="form-check-label" for="wizardPaymentBankTransfer">Bank Transfer</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wizard-step d-none" id="wizardStep8">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Currently Accepting bookings?</label>
+                                    <select class="form-select" id="wizardAcceptingBookings">
+                                        <option value="" selected disabled>Select an option</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Available From</label>
+                                    <input type="date" class="form-control" id="wizardAvailableFrom">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wizard-step d-none" id="wizardStep9">
                             <div id="wizardReviewContent"></div>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
@@ -382,7 +491,7 @@
 
     // Wizard state
     let wizardStep = 1;
-    const totalSteps = 7;
+    const totalSteps = 9;
 
     function showWizardStep(step) {
         for (let i = 1; i <= totalSteps; i++) {
@@ -487,6 +596,41 @@
                 }
             }
 
+            // New photo fields
+            const bathrooms = document.getElementById('wizardBathrooms');
+            if (bathrooms.files.length > 0) {
+                for (let i = 0; i < bathrooms.files.length; i++) {
+                    formData.append('bathroom_photos[]', bathrooms.files[i]);
+                }
+            }
+
+            const commonAreas = document.getElementById('wizardCommonAreas');
+            if (commonAreas.files.length > 0) {
+                for (let i = 0; i < commonAreas.files.length; i++) {
+                    formData.append('common_area_photos[]', commonAreas.files[i]);
+                }
+            }
+
+            // Booking Info
+            formData.append('min_booking_duration', document.getElementById('wizardMinBookingDuration').value);
+            formData.append('min_booking_unit', document.getElementById('wizardMinBookingUnit').value);
+            formData.append('advance_payment', document.getElementById('wizardAdvancePayment').value);
+            formData.append('advance_payment_unit', document.getElementById('wizardAdvancePaymentUnit').value);
+            formData.append('refund_policy', document.getElementById('wizardRefundPolicy').value);
+
+            // Payment methods
+            const paymentMethods = [];
+            document.querySelectorAll('#wizardStep7 .form-check-input:checked').forEach(checkbox => {
+                paymentMethods.push(checkbox.value);
+            });
+            paymentMethods.forEach(method => {
+                formData.append('payment_methods[]', method);
+            });
+
+            // Availability Status
+            formData.append('accepting_bookings', document.getElementById('wizardAcceptingBookings').value);
+            formData.append('available_from', document.getElementById('wizardAvailableFrom').value);
+
             // Submit the form data
             fetch('../includes/add_hostel.php', {
                 method: 'POST',
@@ -582,20 +726,77 @@
         const emailAddress = document.getElementById('wizardEmailAddress').value;
         const address = document.getElementById('wizardFullAddress').value;
         const city = document.getElementById('wizardCity').value;
+        const overview = document.getElementById('wizardOverview').value;
+        const minBookingDuration = document.getElementById('wizardMinBookingDuration').value;
+        const minBookingUnit = document.getElementById('wizardMinBookingUnit').value;
+        const advancePayment = document.getElementById('wizardAdvancePayment').value;
+        const advancePaymentUnit = document.getElementById('wizardAdvancePaymentUnit').value;
+        const refundPolicy = document.getElementById('wizardRefundPolicy').value;
+        const acceptingBookings = document.getElementById('wizardAcceptingBookings').value;
+        const availableFrom = document.getElementById('wizardAvailableFrom').value;
+        
+        // Collect selected facilities
+        const facilities = [];
+        document.querySelectorAll('#wizardStep5 .form-check-input:checked').forEach(checkbox => {
+            facilities.push(checkbox.value);
+        });
+        
+        // Collect selected payment methods
+        const paymentMethods = [];
+        document.querySelectorAll('#wizardStep7 .form-check-input:checked').forEach(checkbox => {
+            paymentMethods.push(checkbox.value);
+        });
+        
+        // Collect selected room types
+        const roomTypes = Array.from(document.getElementById('wizardRoomTypes').selectedOptions).map(opt => opt.value);
         
         const reviewContent = document.getElementById('wizardReviewContent');
         if (reviewContent) {
             reviewContent.innerHTML = `
               <h5>Review Your Hostel Details</h5>
-              <ul>
-                <li><strong>Name:</strong> ${hostelName}</li>
-                <li><strong>Type:</strong> ${hostelType}</li>
-                <li><strong>Owner:</strong> ${ownerName}</li>
-                <li><strong>Contact:</strong> ${contactNumber}</li>
-                <li><strong>Email:</strong> ${emailAddress}</li>
-                <li><strong>Address:</strong> ${address}</li>
-                <li><strong>City:</strong> ${city}</li>
-              </ul>
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="text-primary">Basic Information</h6>
+                  <ul class="list-unstyled">
+                    <li><strong>Name:</strong> ${hostelName}</li>
+                    <li><strong>Type:</strong> ${hostelType}</li>
+                    <li><strong>Owner:</strong> ${ownerName}</li>
+                    <li><strong>Contact:</strong> ${contactNumber}</li>
+                    <li><strong>Email:</strong> ${emailAddress}</li>
+                  </ul>
+                  
+                  <h6 class="text-primary">Location</h6>
+                  <ul class="list-unstyled">
+                    <li><strong>Address:</strong> ${address}</li>
+                    <li><strong>City:</strong> ${city}</li>
+                  </ul>
+                  
+                  <h6 class="text-primary">Description</h6>
+                  <p><strong>Overview:</strong> ${overview || 'Not provided'}</p>
+                </div>
+                
+                <div class="col-md-6">
+                  <h6 class="text-primary">Booking Information</h6>
+                  <ul class="list-unstyled">
+                    <li><strong>Min Duration:</strong> ${minBookingDuration} ${minBookingUnit}</li>
+                    <li><strong>Advance Payment:</strong> ${advancePayment} ${advancePaymentUnit}</li>
+                    <li><strong>Payment Methods:</strong> ${paymentMethods.join(', ') || 'None selected'}</li>
+                    <li><strong>Refund Policy:</strong> ${refundPolicy || 'Not provided'}</li>
+                  </ul>
+                  
+                  <h6 class="text-primary">Availability</h6>
+                  <ul class="list-unstyled">
+                    <li><strong>Accepting Bookings:</strong> ${acceptingBookings || 'Not specified'}</li>
+                    <li><strong>Available From:</strong> ${availableFrom || 'Not specified'}</li>
+                  </ul>
+                  
+                  <h6 class="text-primary">Room Types</h6>
+                  <p>${roomTypes.join(', ') || 'None selected'}</p>
+                  
+                  <h6 class="text-primary">Facilities</h6>
+                  <p>${facilities.join(', ') || 'None selected'}</p>
+                </div>
+              </div>
             `;
         }
     }
@@ -610,9 +811,13 @@
         container.innerHTML = '';
         
         if (selectedRoomTypes.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">Please select at least one room type to add details.</div>';
+            // Hide the container when no room types are selected
+            container.classList.add('d-none');
             return;
         }
+        
+        // Show the container when room types are selected
+        container.classList.remove('d-none');
         
         // Create input fields for each selected room type
         selectedRoomTypes.forEach((roomType, index) => {
@@ -682,8 +887,65 @@
             });
         }
         
+        // Add event listeners for photo uploads
+        const photoInputs = ['wizardFrontView', 'wizardRoomsPhotos', 'wizardBathrooms', 'wizardCommonAreas'];
+        photoInputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('change', function() {
+                    const isMultiple = input.hasAttribute('multiple');
+                    const previewId = inputId + 'Preview';
+                    previewWizardImage(this, previewId, isMultiple);
+                });
+            }
+        });
+        
         // Initialize first step
         showWizardStep(1);
+    }
+
+    // Photo preview function for wizard
+    function previewWizardImage(input, previewId, isMultiple) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        
+        preview.innerHTML = ''; // Clear existing preview
+
+        if (input.files && input.files.length > 0) {
+            preview.classList.remove('picture-box-placeholder');
+            if (isMultiple) {
+                Array.from(input.files).forEach(file => {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.style.maxWidth = '100px';
+                    img.style.margin = '5px';
+                    img.style.borderRadius = '4px';
+                    preview.appendChild(img);
+                });
+            } else {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(input.files[0]);
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '150px';
+                img.style.borderRadius = '4px';
+                preview.appendChild(img);
+            }
+        } else {
+            preview.classList.add('picture-box-placeholder');
+            preview.innerHTML = '<i class="bi bi-image fs-1"></i>';
+        }
+    }
+
+    // Remove image function for wizard
+    function removeWizardImage(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        
+        if (input) input.value = ''; // Clear the file input
+        if (preview) {
+            preview.innerHTML = '<i class="bi bi-image fs-1"></i>'; // Clear the preview
+            preview.classList.add('picture-box-placeholder');
+        }
     }
 
     // Initialize when DOM is ready
