@@ -388,9 +388,12 @@
         for (let i = 1; i <= totalSteps; i++) {
             const stepElement = document.getElementById('wizardStep' + i);
             const labelElement = document.getElementById('stepLabel' + i);
+            
             if (stepElement) {
-                stepElement.classList.toggle('d-none', i !== step);
+                const shouldShow = i === step;
+                stepElement.classList.toggle('d-none', !shouldShow);
             }
+            
             if (labelElement) {
                 labelElement.classList.toggle('text-primary', i === step);
             }
@@ -406,11 +409,15 @@
     }
 
     function wizardNextStep() {
-        if (!validateWizardStep(wizardStep)) return;
+        // Comment out validation for now
+        // if (!validateWizardStep(wizardStep)) return;
+        
         if (wizardStep < totalSteps) {
             wizardStep++;
             showWizardStep(wizardStep);
-            if (wizardStep === totalSteps) fillWizardReview();
+            if (wizardStep === totalSteps) {
+                fillWizardReview();
+            }
         } else {
             // On submit, collect all data and send via AJAX
             const formData = new FormData();
@@ -638,8 +645,6 @@
 
     // Initialize wizard functionality
     function initializeWizard() {
-        console.log('Initializing wizard functionality...');
-        
         // Add event listener for room types selection
         const roomTypesSelect = document.getElementById('wizardRoomTypes');
         if (roomTypesSelect) {
@@ -687,9 +692,5 @@
     } else {
         initializeWizard();
     }
-    
-    // Also try to initialize after a short delay in case of dynamic loading
-    setTimeout(initializeWizard, 100);
-    setTimeout(initializeWizard, 500);
 })();
 </script>
