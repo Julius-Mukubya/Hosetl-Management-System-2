@@ -35,12 +35,17 @@
                 <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label">Available Room Types</label>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Select one or more room types below. For each selected type, you'll be able to specify details like price, availability, and furnishing.
+                        </div>
                         <select class="form-select" id="roomTypes" multiple>
                             <option value="Single Room">Single Room</option>
                             <option value="Shared Room (2 beds)">Shared Room (2 beds)</option>
                             <option value="Shared Room (3 beds)">Shared Room (3 beds)</option>
                             <option value="Shared Room (4 beds)">Shared Room (4 beds)</option>
                         </select>
+                        <small class="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple room types</small>
                         <div class="error-message text-danger" id="roomTypesError"></div>
                     </div>
                     <div class="col-12" id="dynamicRoomInputs"></div>
@@ -78,31 +83,104 @@
 
         const selectedTypes = Array.from(roomTypesSelect.selectedOptions).map(option => option.value);
 
-        selectedTypes.forEach(type => {
+        if (selectedTypes.length === 0) {
+            dynamicRoomInputs.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Please select at least one room type to add details.
+                </div>`;
+            return;
+        }
+
+        selectedTypes.forEach((type, index) => {
             const groupDiv = document.createElement('div');
-            groupDiv.className = 'room-type-group';
+            groupDiv.className = 'card mb-3 border-primary';
             groupDiv.innerHTML = `
-            <h5>${type}</h5>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Pricing for ${type}</label>
-                    <input type="text" class="form-control" id="pricing_${type.replace(/\s+/g, '_')}" placeholder="e.g., 1000 or 1000.50">
-                    <div class="error-message text-danger" id="pricingError_${type.replace(/\s+/g, '_')}"></div>
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-house-door me-2"></i>${type}</h6>
+                    <span class="badge bg-light text-primary">Room ${index + 1}</span>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Availability Count for ${type}</label>
-                    <input type="number" class="form-control" id="availability_${type.replace(/\s+/g, '_')}" min="0">
-                    <div class="error-message text-danger" id="availabilityError_${type.replace(/\s+/g, '_')}"></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Price per Month</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="pricing_${type.replace(/\s+/g, '_')}" placeholder="Enter price" min="0" step="0.01">
+                            </div>
+                            <div class="error-message text-danger" id="pricingError_${type.replace(/\s+/g, '_')}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Number of Available Rooms</label>
+                            <input type="number" class="form-control" id="availability_${type.replace(/\s+/g, '_')}" placeholder="Enter count" min="0">
+                            <div class="error-message text-danger" id="availabilityError_${type.replace(/\s+/g, '_')}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Room Size (optional)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="size_${type.replace(/\s+/g, '_')}" placeholder="Size" min="0" step="0.1">
+                                <span class="input-group-text">sq ft</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Max Occupancy</label>
+                            <select class="form-select" id="occupancy_${type.replace(/\s+/g, '_')}">
+                                <option value="1">1 person</option>
+                                <option value="2">2 people</option>
+                                <option value="3">3 people</option>
+                                <option value="4">4 people</option>
+                                <option value="5">5+ people</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Furnishing Details</label>
+                            <textarea class="form-control" id="furnishing_${type.replace(/\s+/g, '_')}" rows="2" placeholder="e.g., Bed, Wardrobe, Study Table, Chair, Air Conditioning, etc."></textarea>
+                            <div class="error-message text-danger" id="furnishingError_${type.replace(/\s+/g, '_')}"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Additional Features (optional)</label>
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ac_${type.replace(/\s+/g, '_')}" value="Air Conditioning">
+                                        <label class="form-check-label" for="ac_${type.replace(/\s+/g, '_')}">Air Conditioning</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="heating_${type.replace(/\s+/g, '_')}" value="Heating">
+                                        <label class="form-check-label" for="heating_${type.replace(/\s+/g, '_')}">Heating</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="balcony_${type.replace(/\s+/g, '_')}" value="Balcony">
+                                        <label class="form-check-label" for="balcony_${type.replace(/\s+/g, '_')}">Balcony</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ensuite_${type.replace(/\s+/g, '_')}" value="En-suite Bathroom">
+                                        <label class="form-check-label" for="ensuite_${type.replace(/\s+/g, '_')}">En-suite Bathroom</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-12">
-                    <label class="form-label">Furnishing for ${type}</label>
-                    <textarea class="form-control" id="furnishing_${type.replace(/\s+/g, '_')}" rows="2" placeholder="e.g., bed, mattress, study table, cupboard, fan"></textarea>
-                    <div class="error-message text-danger" id="furnishingError_${type.replace(/\s+/g, '_')}"></div>
-                </div>
-            </div>
-        `;
+            `;
             dynamicRoomInputs.appendChild(groupDiv);
         });
+
+        // Add summary section
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'alert alert-success mt-3';
+        summaryDiv.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>${selectedTypes.length}</strong> room type${selectedTypes.length > 1 ? 's' : ''} selected. 
+            Please fill in the details for each room type above.
+        `;
+        dynamicRoomInputs.appendChild(summaryDiv);
     }
 
     function validateAndSaveRoomSection(sectionId) {
@@ -168,12 +246,29 @@
             const pricing = document.getElementById(`pricing_${typeId}`).value.trim();
             const availability = document.getElementById(`availability_${typeId}`).value;
             const furnishing = document.getElementById(`furnishing_${typeId}`).value.trim();
+            const size = document.getElementById(`size_${typeId}`)?.value || '';
+            const occupancy = document.getElementById(`occupancy_${typeId}`)?.value || '1';
+            
+            // Collect additional features
+            const additionalFeatures = [];
+            const ac = document.getElementById(`ac_${typeId}`);
+            const heating = document.getElementById(`heating_${typeId}`);
+            const balcony = document.getElementById(`balcony_${typeId}`);
+            const ensuite = document.getElementById(`ensuite_${typeId}`);
+            
+            if (ac?.checked) additionalFeatures.push(ac.value);
+            if (heating?.checked) additionalFeatures.push(heating.value);
+            if (balcony?.checked) additionalFeatures.push(balcony.value);
+            if (ensuite?.checked) additionalFeatures.push(ensuite.value);
 
             rooms.push({
                 type,
                 pricing: parseFloat(pricing),
                 availability: parseInt(availability),
-                furnishing
+                furnishing,
+                size: size ? parseFloat(size) : null,
+                occupancy: parseInt(occupancy),
+                additionalFeatures
             });
         });
 

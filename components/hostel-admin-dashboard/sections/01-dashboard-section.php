@@ -135,14 +135,19 @@
                             <div class="row g-3">
                                 <div class="col-md-12">
                                     <label class="form-label">Available Room Types</label>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Select one or more room types below. For each selected type, you'll be able to specify details like price, availability, and furnishing.
+                                    </div>
                                     <select class="form-select" id="wizardRoomTypes" multiple>
                                         <option value="Single Room">Single Room</option>
                                         <option value="Shared Room (2 beds)">Shared Room (2 beds)</option>
                                         <option value="Shared Room (3 beds)">Shared Room (3 beds)</option>
                                         <option value="Shared Room (4 beds)">Shared Room (4 beds)</option>
                                     </select>
+                                    <small class="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple room types</small>
                                 </div>
-                                <div class="col-12 d-none" id="wizardDynamicRoomInputs"></div>
+                                <div class="col-12" id="wizardDynamicRoomInputs"></div>
                             </div>
                         </div>
                         <div class="wizard-step d-none" id="wizardStep5">
@@ -518,8 +523,8 @@
     }
 
     function wizardNextStep() {
-        // Comment out validation for now
-        // if (!validateWizardStep(wizardStep)) return;
+        // Validate current step before proceeding
+        if (!validateWizardStep(wizardStep)) return;
         
         if (wizardStep < totalSteps) {
             wizardStep++;
@@ -557,21 +562,38 @@
             const roomDetails = [];
             
             roomTypes.forEach((roomType, index) => {
-                const price = document.getElementById(`room_price_${index}`)?.value || '0';
-                const availability = document.getElementById(`room_availability_${index}`)?.value || '0';
-                const furnishing = document.getElementById(`room_furnishing_${index}`)?.value || 'To be specified';
+                const price = document.getElementById(`room_price_${index}`)?.value || 'Not specified';
+                const availability = document.getElementById(`room_availability_${index}`)?.value || 'Not specified';
+                const size = document.getElementById(`room_size_${index}`)?.value || 'Not specified';
+                const occupancy = document.getElementById(`room_occupancy_${index}`)?.value || '1';
+                
+                // Collect additional features
+                const additionalFeatures = [];
+                const ac = document.getElementById(`room_ac_${index}`);
+                const heating = document.getElementById(`room_heating_${index}`);
+                const balcony = document.getElementById(`room_balcony_${index}`);
+                const ensuite = document.getElementById(`room_ensuite_${index}`);
+                
+                if (ac?.checked) additionalFeatures.push(ac.value);
+                if (heating?.checked) additionalFeatures.push(heating.value);
+                if (balcony?.checked) additionalFeatures.push(balcony.value);
+                if (ensuite?.checked) additionalFeatures.push(ensuite.value);
                 
                 roomDetails.push({
                     type: roomType,
                     price: price,
                     availability: availability,
-                    furnishing: furnishing
+                    size: size,
+                    occupancy: occupancy,
+                    additionalFeatures: additionalFeatures
                 });
                 
                 formData.append('room_types[]', roomType);
                 formData.append('room_prices[]', price);
                 formData.append('room_availability[]', availability);
-                formData.append('room_furnishing[]', furnishing);
+                formData.append('room_sizes[]', size);
+                formData.append('room_occupancy[]', occupancy);
+                formData.append('room_additional_features[]', JSON.stringify(additionalFeatures));
             });
 
             // Facilities (collect checked facilities)
@@ -663,10 +685,82 @@
     }
 
     function wizardClear() {
-        const form = document.getElementById('addHostelWizardForm');
-        if (form) form.reset();
-        wizardStep = 1;
-        showWizardStep(wizardStep);
+        // Clear only the current step's fields
+        clearCurrentStep();
+        // Clear any validation errors
+        clearValidationErrors();
+    }
+
+    function clearCurrentStep() {
+        switch(wizardStep) {
+            case 1: // Basic Info
+                document.getElementById('wizardHostelName').value = '';
+                document.getElementById('wizardHostelType').value = '';
+                document.getElementById('wizardOwnerName').value = '';
+                document.getElementById('wizardContactNumber').value = '';
+                document.getElementById('wizardEmailAddress').value = '';
+                break;
+                
+            case 2: // Location
+                document.getElementById('wizardFullAddress').value = '';
+                document.getElementById('wizardCity').value = '';
+                document.getElementById('wizardLandmarks').value = '';
+                document.getElementById('wizardDistance').value = '';
+                document.getElementById('wizardDirections').value = '';
+                break;
+                
+            case 3: // Description
+                document.getElementById('wizardOverview').value = '';
+                document.getElementById('wizardHostelRules').value = '';
+                document.getElementById('wizardCheckInTime').value = '';
+                document.getElementById('wizardCheckOutTime').value = '';
+                document.getElementById('wizardSecurityFeatures').value = '';
+                break;
+                
+            case 4: // Rooms
+                document.getElementById('wizardRoomTypes').selectedIndex = -1;
+                document.getElementById('wizardDynamicRoomInputs').innerHTML = '';
+                break;
+                
+            case 5: // Facilities
+                document.querySelectorAll('#wizardStep5 .form-check-input').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                break;
+                
+            case 6: // Photos
+                document.getElementById('wizardFrontView').value = '';
+                document.getElementById('wizardRoomsPhotos').value = '';
+                document.getElementById('wizardBathrooms').value = '';
+                document.getElementById('wizardCommonAreas').value = '';
+                
+                // Clear previews
+                document.getElementById('wizardFrontViewPreview').innerHTML = '<i class="bi bi-image fs-1"></i>';
+                document.getElementById('wizardFrontViewPreview').classList.add('picture-box-placeholder');
+                document.getElementById('wizardRoomsPreview').innerHTML = '<i class="bi bi-images fs-1"></i>';
+                document.getElementById('wizardRoomsPreview').classList.add('picture-box-placeholder');
+                document.getElementById('wizardBathroomsPreview').innerHTML = '<i class="bi bi-images fs-1"></i>';
+                document.getElementById('wizardBathroomsPreview').classList.add('picture-box-placeholder');
+                document.getElementById('wizardCommonAreasPreview').innerHTML = '<i class="bi bi-images fs-1"></i>';
+                document.getElementById('wizardCommonAreasPreview').classList.add('picture-box-placeholder');
+                break;
+                
+            case 7: // Booking Info
+                document.getElementById('wizardMinBookingDuration').value = '';
+                document.getElementById('wizardMinBookingUnit').value = 'Hours';
+                document.getElementById('wizardAdvancePayment').value = '';
+                document.getElementById('wizardAdvancePaymentUnit').value = '';
+                document.getElementById('wizardRefundPolicy').value = '';
+                document.querySelectorAll('#wizardStep7 .form-check-input').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                break;
+                
+            case 8: // Availability
+                document.getElementById('wizardAcceptingBookings').value = '';
+                document.getElementById('wizardAvailableFrom').value = '';
+                break;
+        }
     }
 
     function exitWizard() {
@@ -692,29 +786,351 @@
     }
 
     function validateWizardStep(step) {
-        if (step === 1) {
-            if (!document.getElementById('wizardHostelName').value.trim()) {
-                alert('Hostel Name is required');
-                return false;
+        // Clear previous error messages and styling
+        clearValidationErrors();
+        
+        let isValid = true;
+        
+        switch(step) {
+            case 1: // Basic Info
+                isValid = validateBasicInfo();
+                break;
+            case 2: // Location
+                isValid = validateLocation();
+                break;
+            case 3: // Description
+                isValid = validateDescription();
+                break;
+            case 4: // Rooms
+                isValid = validateRooms();
+                break;
+            case 5: // Facilities
+                isValid = validateFacilities();
+                break;
+            case 6: // Photos
+                isValid = validatePhotos();
+                break;
+            case 7: // Booking Info
+                isValid = validateBookingInfo();
+                break;
+            case 8: // Availability
+                isValid = validateAvailability();
+                break;
+        }
+        
+        return isValid;
+    }
+
+    function clearValidationErrors() {
+        // Remove error styling from all fields
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        // Clear all error messages
+        document.querySelectorAll('.error-message').forEach(error => {
+            error.textContent = '';
+        });
+    }
+
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('is-invalid');
+            
+            // Create or update error message
+            let errorElement = field.parentNode.querySelector('.error-message');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'error-message text-danger mt-1';
+                field.parentNode.appendChild(errorElement);
             }
-            if (!document.getElementById('wizardHostelType').value) {
-                alert('Hostel Type is required');
-                return false;
+            errorElement.textContent = message;
+        }
+    }
+
+    function validateBasicInfo() {
+        let isValid = true;
+        
+        // Hostel Name
+        const hostelName = document.getElementById('wizardHostelName').value.trim();
+        if (!hostelName) {
+            showFieldError('wizardHostelName', 'Hostel Name is required');
+            isValid = false;
+        } else if (hostelName.length < 3) {
+            showFieldError('wizardHostelName', 'Hostel Name must be at least 3 characters');
+            isValid = false;
+        }
+        
+        // Hostel Type
+        const hostelType = document.getElementById('wizardHostelType').value;
+        if (!hostelType) {
+            showFieldError('wizardHostelType', 'Please select a Hostel Type');
+            isValid = false;
+        }
+        
+        // Owner Name
+        const ownerName = document.getElementById('wizardOwnerName').value.trim();
+        if (!ownerName) {
+            showFieldError('wizardOwnerName', 'Owner Name is required');
+            isValid = false;
+        }
+        
+        // Contact Number
+        const contactNumber = document.getElementById('wizardContactNumber').value.trim();
+        if (!contactNumber) {
+            showFieldError('wizardContactNumber', 'Contact Number is required');
+            isValid = false;
+        } else if (!/^[\d\s\-\+\(\)]+$/.test(contactNumber)) {
+            showFieldError('wizardContactNumber', 'Please enter a valid contact number');
+            isValid = false;
+        }
+        
+        // Email Address
+        const emailAddress = document.getElementById('wizardEmailAddress').value.trim();
+        if (!emailAddress) {
+            showFieldError('wizardEmailAddress', 'Email Address is required');
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress)) {
+            showFieldError('wizardEmailAddress', 'Please enter a valid email address');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateLocation() {
+        let isValid = true;
+        
+        // Full Address
+        const fullAddress = document.getElementById('wizardFullAddress').value.trim();
+        if (!fullAddress) {
+            showFieldError('wizardFullAddress', 'Full Address is required');
+            isValid = false;
+        } else if (fullAddress.length < 10) {
+            showFieldError('wizardFullAddress', 'Address must be at least 10 characters');
+            isValid = false;
+        }
+        
+        // City
+        const city = document.getElementById('wizardCity').value.trim();
+        if (!city) {
+            showFieldError('wizardCity', 'City is required');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateDescription() {
+        let isValid = true;
+        
+        // Overview
+        const overview = document.getElementById('wizardOverview').value.trim();
+        if (!overview) {
+            showFieldError('wizardOverview', 'Overview/Introduction is required');
+            isValid = false;
+        } else if (overview.length < 20) {
+            showFieldError('wizardOverview', 'Overview must be at least 20 characters');
+            isValid = false;
+        }
+        
+        // Hostel Rules
+        const hostelRules = document.getElementById('wizardHostelRules').value.trim();
+        if (!hostelRules) {
+            showFieldError('wizardHostelRules', 'Hostel Rules are required');
+            isValid = false;
+        }
+        
+        // Check-in Time
+        const checkInTime = document.getElementById('wizardCheckInTime').value;
+        if (!checkInTime) {
+            showFieldError('wizardCheckInTime', 'Check-in Time is required');
+            isValid = false;
+        }
+        
+        // Check-out Time
+        const checkOutTime = document.getElementById('wizardCheckOutTime').value;
+        if (!checkOutTime) {
+            showFieldError('wizardCheckOutTime', 'Check-out Time is required');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateRooms() {
+        let isValid = true;
+        
+        // Room Types
+        const roomTypes = document.getElementById('wizardRoomTypes');
+        const selectedRoomTypes = Array.from(roomTypes.selectedOptions).map(opt => opt.value);
+        
+        if (selectedRoomTypes.length === 0) {
+            showFieldError('wizardRoomTypes', 'Please select at least one room type');
+            isValid = false;
+        } else {
+            // Validate room details for each selected type
+            selectedRoomTypes.forEach((roomType, index) => {
+                const price = document.getElementById(`room_price_${index}`)?.value;
+                const availability = document.getElementById(`room_availability_${index}`)?.value;
+                
+                if (!price || price <= 0) {
+                    showFieldError(`room_price_${index}`, 'Please enter a valid price');
+                    isValid = false;
+                }
+                
+                if (!availability || availability <= 0) {
+                    showFieldError(`room_availability_${index}`, 'Please enter number of available rooms');
+                    isValid = false;
+                }
+            });
+        }
+        
+        return isValid;
+    }
+
+    function validateFacilities() {
+        let isValid = true;
+        
+        // Check if at least one facility is selected
+        const selectedFacilities = document.querySelectorAll('#wizardStep5 .form-check-input:checked');
+        
+        if (selectedFacilities.length === 0) {
+            // Show error message in facilities section
+            const facilitiesContainer = document.getElementById('wizardStep5');
+            let errorElement = facilitiesContainer.querySelector('.error-message');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'error-message text-danger mt-2';
+                facilitiesContainer.appendChild(errorElement);
             }
-            if (!document.getElementById('wizardOwnerName').value.trim()) {
-                alert('Owner Name is required');
-                return false;
+            errorElement.textContent = 'Please select at least one facility';
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validatePhotos() {
+        let isValid = true;
+        
+        // Check if at least one photo is uploaded
+        const frontView = document.getElementById('wizardFrontView').files.length;
+        const roomsPhotos = document.getElementById('wizardRoomsPhotos').files.length;
+        const bathrooms = document.getElementById('wizardBathrooms').files.length;
+        const commonAreas = document.getElementById('wizardCommonAreas').files.length;
+        
+        if (frontView === 0 && roomsPhotos === 0 && bathrooms === 0 && commonAreas === 0) {
+            // Show error message in photos section
+            const photosContainer = document.getElementById('wizardStep6');
+            let errorElement = photosContainer.querySelector('.error-message');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'error-message text-danger mt-2';
+                photosContainer.appendChild(errorElement);
             }
-            if (!document.getElementById('wizardContactNumber').value.trim()) {
-                alert('Contact Number is required');
-                return false;
+            errorElement.textContent = 'Please upload at least one photo';
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateBookingInfo() {
+        let isValid = true;
+        
+        // Minimum Booking Duration
+        const minBookingDuration = document.getElementById('wizardMinBookingDuration').value.trim();
+        if (!minBookingDuration) {
+            showFieldError('wizardMinBookingDuration', 'Minimum Booking Duration is required');
+            isValid = false;
+        } else if (!/^\d+$/.test(minBookingDuration) || parseInt(minBookingDuration) <= 0) {
+            showFieldError('wizardMinBookingDuration', 'Please enter a valid positive number');
+            isValid = false;
+        }
+        
+        // Minimum Booking Unit
+        const minBookingUnit = document.getElementById('wizardMinBookingUnit').value;
+        if (!minBookingUnit) {
+            showFieldError('wizardMinBookingUnit', 'Please select a unit for booking duration');
+            isValid = false;
+        }
+        
+        // Advance Payment
+        const advancePayment = document.getElementById('wizardAdvancePayment').value.trim();
+        if (!advancePayment) {
+            showFieldError('wizardAdvancePayment', 'Advance Payment amount is required');
+            isValid = false;
+        } else if (!/^\d+(\.\d{1,2})?$/.test(advancePayment)) {
+            showFieldError('wizardAdvancePayment', 'Please enter a valid amount (e.g., 1000 or 1000.50)');
+            isValid = false;
+        }
+        
+        // Advance Payment Unit
+        const advancePaymentUnit = document.getElementById('wizardAdvancePaymentUnit').value.trim();
+        if (!advancePaymentUnit) {
+            showFieldError('wizardAdvancePaymentUnit', 'Currency unit is required');
+            isValid = false;
+        } else if (!/^[A-Za-z]{2,10}$/.test(advancePaymentUnit)) {
+            showFieldError('wizardAdvancePaymentUnit', 'Please enter a valid currency unit (e.g., USD, KES)');
+            isValid = false;
+        }
+        
+        // Refund Policy
+        const refundPolicy = document.getElementById('wizardRefundPolicy').value.trim();
+        if (!refundPolicy) {
+            showFieldError('wizardRefundPolicy', 'Refund Policy is required');
+            isValid = false;
+        } else if (refundPolicy.length < 10) {
+            showFieldError('wizardRefundPolicy', 'Refund Policy must be at least 10 characters');
+            isValid = false;
+        }
+        
+        // Payment Methods
+        const selectedPaymentMethods = document.querySelectorAll('#wizardStep7 .form-check-input:checked');
+        if (selectedPaymentMethods.length === 0) {
+            const paymentContainer = document.getElementById('wizardStep7');
+            let errorElement = paymentContainer.querySelector('.error-message');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'error-message text-danger mt-2';
+                paymentContainer.appendChild(errorElement);
             }
-            if (!document.getElementById('wizardEmailAddress').value.trim()) {
-                alert('Email Address is required');
-                return false;
+            errorElement.textContent = 'Please select at least one payment method';
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateAvailability() {
+        let isValid = true;
+        
+        // Accepting Bookings
+        const acceptingBookings = document.getElementById('wizardAcceptingBookings').value;
+        if (!acceptingBookings) {
+            showFieldError('wizardAcceptingBookings', 'Please select whether you are accepting bookings');
+            isValid = false;
+        }
+        
+        // Available From
+        const availableFrom = document.getElementById('wizardAvailableFrom').value;
+        if (!availableFrom) {
+            showFieldError('wizardAvailableFrom', 'Available From date is required');
+            isValid = false;
+        } else {
+            const selectedDate = new Date(availableFrom);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                showFieldError('wizardAvailableFrom', 'Available From date cannot be in the past');
+                isValid = false;
             }
         }
-        return true;
+        
+        return isValid;
     }
 
     function fillWizardReview() {
@@ -749,6 +1165,36 @@
         
         // Collect selected room types
         const roomTypes = Array.from(document.getElementById('wizardRoomTypes').selectedOptions).map(opt => opt.value);
+        
+        // Collect room details for each type
+        const roomDetails = [];
+        roomTypes.forEach((roomType, index) => {
+            const price = document.getElementById(`room_price_${index}`)?.value || 'Not specified';
+            const availability = document.getElementById(`room_availability_${index}`)?.value || 'Not specified';
+            const size = document.getElementById(`room_size_${index}`)?.value || 'Not specified';
+            const occupancy = document.getElementById(`room_occupancy_${index}`)?.value || '1';
+            
+            // Collect additional features
+            const additionalFeatures = [];
+            const ac = document.getElementById(`room_ac_${index}`);
+            const heating = document.getElementById(`room_heating_${index}`);
+            const balcony = document.getElementById(`room_balcony_${index}`);
+            const ensuite = document.getElementById(`room_ensuite_${index}`);
+            
+            if (ac?.checked) additionalFeatures.push(ac.value);
+            if (heating?.checked) additionalFeatures.push(heating.value);
+            if (balcony?.checked) additionalFeatures.push(balcony.value);
+            if (ensuite?.checked) additionalFeatures.push(ensuite.value);
+            
+            roomDetails.push({
+                type: roomType,
+                price: price,
+                availability: availability,
+                size: size,
+                occupancy: occupancy,
+                additionalFeatures: additionalFeatures
+            });
+        });
         
         const reviewContent = document.getElementById('wizardReviewContent');
         if (reviewContent) {
@@ -791,7 +1237,16 @@
                   </ul>
                   
                   <h6 class="text-primary">Room Types</h6>
-                  <p>${roomTypes.join(', ') || 'None selected'}</p>
+                  ${roomDetails.length > 0 ? roomDetails.map(room => `
+                    <div class="border rounded p-2 mb-2">
+                      <strong>${room.type}</strong><br>
+                      <small class="text-muted">
+                        Price: $${room.price} | Available: ${room.availability} | 
+                        Size: ${room.size} sq ft | Max Occupancy: ${room.occupancy} person${room.occupancy > 1 ? 's' : ''}
+                        ${room.additionalFeatures.length > 0 ? `<br>Features: ${room.additionalFeatures.join(', ')}` : ''}
+                      </small>
+                    </div>
+                  `).join('') : '<p>None selected</p>'}
                   
                   <h6 class="text-primary">Facilities</h6>
                   <p>${facilities.join(', ') || 'None selected'}</p>
@@ -811,41 +1266,101 @@
         container.innerHTML = '';
         
         if (selectedRoomTypes.length === 0) {
-            // Hide the container when no room types are selected
-            container.classList.add('d-none');
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Please select at least one room type to add details.
+                </div>`;
             return;
         }
-        
-        // Show the container when room types are selected
-        container.classList.remove('d-none');
         
         // Create input fields for each selected room type
         selectedRoomTypes.forEach((roomType, index) => {
             const roomDiv = document.createElement('div');
-            roomDiv.className = 'card mb-3';
+            roomDiv.className = 'card mb-3 border-primary';
             roomDiv.innerHTML = `
-                <div class="card-header">
-                    <h6 class="mb-0">${roomType}</h6>
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-house-door me-2"></i>${roomType}</h6>
+                    <span class="badge bg-light text-primary">Room ${index + 1}</span>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Price per Month</label>
-                            <input type="number" class="form-control" id="room_price_${index}" placeholder="Enter price" min="0" step="0.01">
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="room_price_${index}" placeholder="Enter price" min="0" step="0.01">
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Number of Available Rooms</label>
                             <input type="number" class="form-control" id="room_availability_${index}" placeholder="Enter count" min="0">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Room Size (optional)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="room_size_${index}" placeholder="Size" min="0" step="0.1">
+                                <span class="input-group-text">sq ft</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Max Occupancy</label>
+                            <select class="form-select" id="room_occupancy_${index}">
+                                <option value="1">1 person</option>
+                                <option value="2">2 people</option>
+                                <option value="3">3 people</option>
+                                <option value="4">4 people</option>
+                                <option value="5">5+ people</option>
+                            </select>
+                        </div>
                         <div class="col-12">
                             <label class="form-label">Furnishing Details</label>
-                            <textarea class="form-control" id="room_furnishing_${index}" rows="2" placeholder="e.g., Bed, Wardrobe, Study Table, Chair"></textarea>
+                            <textarea class="form-control" id="room_furnishing_${index}" rows="2" placeholder="e.g., Bed, Wardrobe, Study Table, Chair, Air Conditioning, etc."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Additional Features (optional)</label>
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="room_ac_${index}" value="Air Conditioning">
+                                        <label class="form-check-label" for="room_ac_${index}">Air Conditioning</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="room_heating_${index}" value="Heating">
+                                        <label class="form-check-label" for="room_heating_${index}">Heating</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="room_balcony_${index}" value="Balcony">
+                                        <label class="form-check-label" for="room_balcony_${index}">Balcony</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="room_ensuite_${index}" value="En-suite Bathroom">
+                                        <label class="form-check-label" for="room_ensuite_${index}">En-suite Bathroom</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
             container.appendChild(roomDiv);
         });
+        
+        // Add summary section
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'alert alert-success mt-3';
+        summaryDiv.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>${selectedRoomTypes.length}</strong> room type${selectedRoomTypes.length > 1 ? 's' : ''} selected. 
+            Please fill in the details for each room type above.
+        `;
+        container.appendChild(summaryDiv);
     }
 
     // Initialize wizard functionality
